@@ -2,9 +2,8 @@ import json
 import os
 from db import db
 from flask import Flask
-from db import Course
-from db import Assignment
-from db import User
+from db import Show
+from db import Genre
 from flask import request
 
 app = Flask(__name__)
@@ -18,6 +17,7 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
+
 def success_response(data, code=200):
     return json.dumps(data), code
 
@@ -25,24 +25,45 @@ def success_response(data, code=200):
 def failure_response(message, code=404):
     return json.dumps({"error": message}), code
 
-# your routes here
-@app.route("/api/courses/")
-def get_courses():
+
+@app.route("/api/watchlist/")
+def get_shows():
     return success_response(
-        {"courses": [c.serialize() for c in Course.query.all()]}
+        {"shows": [s.serialize() for s in Show.query.all()]}
     )
 
 
-@app.route("/api/courses/", methods=["POST"])
-def create_course():
+@app.route("/api/watchlist/", methods=["POST"])
+def create_watchlist_show():
     body = json.loads(request.data)
-    if "code" not in body or "name" not in body:
-        return failure_response("Necessary information not provided!", 400)
-    new_course = Course(code=body.get("code"), name=body.get("name"))
-    db.session.add(new_course)
+    lst = ["name", "year_released", "start_date", "finished", "genre"]
+    for field in lst:
+        if field not in body:
+            return failure_response("Necessary information not provided!", 400)
+    new_show = Show(name=body.get("name"), year_released=body.get("year_released"), start_date=body.get(
+        "start_date"), finished=body.get("finished"), genre=body.get("genre"))
+    db.session.add(new_show)
     db.session.commit()
-    return success_response(new_course.serialize(), 201)
+    return success_response(new_show.serialize(), 201)
 
+
+@app.route("/api/watchlist/<int:show_id>/", methods=["DELETE"])
+def delete_watchlist_show(show_id):
+    show = Show.query.filter_by(id=show_id).first()
+    if show is None:
+        return failure_response("Course not found!")
+    db.session.delete(show)
+    db.session.commit()
+    return success_response(show.serialize())
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
+
+
+"""
+-----FOR REFERENCE-----
 @app.route("/api/courses/<int:course_id>/")
 def get_course_by_id(course_id):
     course = Course.query.filter_by(id=course_id).first()
@@ -50,14 +71,6 @@ def get_course_by_id(course_id):
         return failure_response("Course not found!")
     return success_response(course.serialize())
 
-@app.route("/api/courses/<int:course_id>/", methods=["DELETE"])
-def delete_course(course_id):
-    course = Course.query.filter_by(id=course_id).first()
-    if course is None:
-        return failure_response("Course not found!")
-    db.session.delete(course)
-    db.session.commit()
-    return success_response(course.serialize())
 
 @app.route("/api/users/", methods=["POST"])
 def create_user():
@@ -69,12 +82,14 @@ def create_user():
     db.session.commit()
     return success_response(new_user.serialize(), 201)
 
+
 @app.route("/api/users/<int:user_id>/")
 def get_user_by_id(user_id):
     user = User.query.filter_by(id=user_id).first()
     if user is None:
         return failure_response("User not found!")
     return success_response(user.serialize())
+
 
 @app.route("/api/courses/<int:course_id>/add/", methods=["POST"])
 def assign_user_to_course(course_id):
@@ -96,6 +111,7 @@ def assign_user_to_course(course_id):
     db.session.commit()
     return success_response(course.serialize())
 
+
 @app.route("/api/courses/<int:course_id>/assignment/", methods=["POST"])
 def create_assignment(course_id):
     course = Course.query.filter_by(id=course_id).first()
@@ -112,10 +128,4 @@ def create_assignment(course_id):
     db.session.add(new_assignment)
     db.session.commit()
     return success_response(new_assignment.serialize(), 201)
-
-
-
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))	
-    app.run(host="0.0.0.0", port=port)
+"""
