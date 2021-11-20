@@ -1,12 +1,10 @@
 Names: Prithwish Dan, Joyce Wu
 NetIDs: pd337, jyw55
 
-Server Address: TBD
+Server Address: TBD (http://0.0.0.0:5000/ for now when running app.py)
 
 Routes:
 GET /api/watchlist/
-
-GET /api/planlist/
 
 POST /api/watchlist/
 Request Body:
@@ -18,10 +16,4 @@ Request Body:
   "finished": false
 }
 
-POST /api/planlist/
-Request Body:
-{
-  "name": "Squid Game",
-  "genre": "Thriller",
-  "year_released": 2021
-}
+DELETE /api/watchlist/<int:show_id>/
