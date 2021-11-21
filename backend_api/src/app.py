@@ -25,6 +25,10 @@ def success_response(data, code=200):
 def failure_response(message, code=404):
     return json.dumps({"error": message}), code
 
+@app.route("/")
+def bruh():
+    print("Hello World!")
+
 
 @app.route("/api/watchlist/")
 def get_shows():
