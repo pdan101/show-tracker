@@ -25,6 +25,7 @@ def success_response(data, code=200):
 def failure_response(message, code=404):
     return json.dumps({"error": message}), code
 
+
 @app.route("/")
 def bruh():
     print("Hello World!")
@@ -33,7 +34,24 @@ def bruh():
 @app.route("/api/watchlist/")
 def get_shows():
     return success_response(
-        {"shows": [s.serialize() for s in Show.query.all()]}
+        {"shows": sorted([s.serialize() for s in Show.query.all()],
+                         key=lambda show: show['finished'])}
+    )
+
+
+@app.route("/api/watchlist/releasesort/")
+def get_shows_by_release_date():
+    return success_response(
+        {"shows": sorted([s.serialize() for s in Show.query.all()],
+                         key=lambda show: show['year_released'])}
+    )
+
+
+@app.route("/api/genrelist/")
+def get_genres():
+    return success_response(
+        {"genres": sorted([g.serialize() for g in Genre.query.all()],
+                          key=lambda g: g['name'])}
     )
 
 
@@ -44,11 +62,25 @@ def create_watchlist_show():
     for field in lst:
         if field not in body:
             return failure_response("Necessary information not provided!", 400)
+    find_genre = Genre.query.filter_by(name=body.get('genre')).first()
+    if find_genre is None:
+        find_genre = Genre(name=body.get('genre'))
+        db.session.add(find_genre)
+        db.session.commit()
     new_show = Show(name=body.get("name"), year_released=body.get("year_released"), start_date=body.get(
-        "start_date"), finished=body.get("finished"), genre=body.get("genre"))
+        "start_date"), finished=body.get("finished"), genre_id=find_genre.id)
     db.session.add(new_show)
     db.session.commit()
+
     return success_response(new_show.serialize(), 201)
+
+
+@app.route("/api/watchlist/<int:show_id>/")
+def get_show_by_id(show_id):
+    show = Show.query.filter_by(id=show_id).first()
+    if show is None:
+        return failure_response("Show not found!")
+    return success_response(show.serialize())
 
 
 @app.route("/api/watchlist/<int:show_id>/", methods=["DELETE"])

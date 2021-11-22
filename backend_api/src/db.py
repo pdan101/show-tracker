@@ -10,20 +10,20 @@ class Show(db.Model):
     year_released = db.Column(db.Integer, nullable=False)
     start_date = db.Column(db.String, nullable=False)
     finished = db.Column(db.Boolean, nullable=False)
-    genre = db.Column(db.String, db.ForeignKey("genre.id"), nullable=False)
+    genre_id = db.Column(db.Integer, db.ForeignKey("genre.id"), nullable=False)
 
     def __init__(self, **kwargs):
         self.name = kwargs.get("name")
         self.year_released = kwargs.get("year_released")
         self.start_date = kwargs.get("start_date")
         self.finished = kwargs.get("finished")
-        self.genre = kwargs.get("genre")
+        self.genre_id = kwargs.get("genre_id")
 
     def serialize(self):
         return {
             "id": self.id,
             "name": self.name,
-            "genre": self.genre,
+            "genre": Genre.query.filter_by(id=self.genre_id).first().name,
             "year_released": self.year_released,
             "start_date": self.start_date,
             "finished": self.finished
