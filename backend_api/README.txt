@@ -16,4 +16,10 @@ Request Body:
   "finished": false
 }
 
+GET /api/watchlist/<int:show_id>/
+
 DELETE /api/watchlist/<int:show_id>/
+
+GET /api/watchlist/releasesort/
+
+GET /api/genrelist/
