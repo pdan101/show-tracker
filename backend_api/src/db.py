@@ -12,6 +12,7 @@ class Show(db.Model):
     finished = db.Column(db.Boolean, nullable=True)
     genre_id = db.Column(db.Integer, db.ForeignKey("genre.id"), nullable=False)
     is_plan_to_watch = db.Column(db.Boolean, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
 
     def __init__(self, **kwargs):
         self.name = kwargs.get("name")
@@ -20,6 +21,7 @@ class Show(db.Model):
         self.finished = kwargs.get("finished")
         self.genre_id = kwargs.get("genre_id")
         self.is_plan_to_watch = kwargs.get("is_plan_to_watch")
+        self.user_id = kwargs.get("user_id")
 
     def serialize(self):
         if not self.is_plan_to_watch:
@@ -73,5 +75,22 @@ class Genre(db.Model):
         return {
             "id": self.id,
             "name": self.name,
+            "shows": [s.serialize_plan() for s in self.shows]
+        }
+
+
+class User(db.Model):
+    __tablename__ = "user"
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String, nullable=False)
+    shows = db.relationship("Show", cascade="delete")
+
+    def __init__(self, **kwargs):
+        self.username = kwargs.get("username")
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "username": self.username,
             "shows": [s.serialize() for s in self.shows]
         }
