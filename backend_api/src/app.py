@@ -40,7 +40,7 @@ def login():
         db.session.add(find_user)
         db.session.commit()
     return success_response(
-        find_user.serialize()
+        find_user.serialize(), 201
     )
 
 
