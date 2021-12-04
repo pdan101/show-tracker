@@ -111,5 +111,4 @@ class User(db.Model):
         return {
             "id": self.id,
             "username": self.username,
-            "shows": [s.serialize() for s in self.shows]
         }

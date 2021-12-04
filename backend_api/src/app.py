@@ -39,35 +39,31 @@ def login():
         find_user = User(username=body.get('username'))
         db.session.add(find_user)
         db.session.commit()
+        return success_response(
+        find_user.serialize(), 201)
     return success_response(
-        find_user.serialize(), 201
+        find_user.serialize(), 200
     )
 
 
-@app.route("/api/watchlist/")
-def get_shows():
-    body = json.loads(request.data)
-    if "user_id" not in body:
-        return failure_response("user_id not provided!", 400)
-    user = User.query.filter_by(id=body.get("user_id")).first()
+@app.route("/api/watchlist/<int:user_id>/")
+def get_shows(user_id):
+    user = User.query.filter_by(id=user_id).first()
     if user is None:
         return failure_response("User not found!")
     return success_response(
-        {"shows": sorted([s.serialize_watch() for s in Show.query.filter_by(is_plan_to_watch=False, user_id=body.get("user_id"))],
+        {"shows": sorted([s.serialize_watch() for s in Show.query.filter_by(is_plan_to_watch=False, user_id=user_id)],
                          key=lambda show: show['finished'])}
     )
 
 
-@app.route("/api/watchlist/releasesort/")
-def get_shows_by_release_date():
-    body = json.loads(request.data)
-    if "user_id" not in body:
-        return failure_response("user_id not provided!", 400)
-    user = User.query.filter_by(id=body.get("user_id")).first()
+@app.route("/api/watchlist/releasesort/<int:user_id>/")
+def get_shows_by_release_date(user_id):
+    user = User.query.filter_by(id=user_id).first()
     if user is None:
         return failure_response("User not found!")
     return success_response(
-        {"shows": sorted([s.serialize_watch() for s in Show.query.filter_by(is_plan_to_watch=False, user_id=body.get("user_id"))],
+        {"shows": sorted([s.serialize_watch() for s in Show.query.filter_by(is_plan_to_watch=False, user_id=user_id)],
                          key=lambda show: show['year_released'])}
     )
 
@@ -80,15 +76,15 @@ def get_genres():
     )
 
 
-@app.route("/api/watchlist/", methods=["POST"])
-def create_watchlist_show():
+@app.route("/api/watchlist/<int:user_id>/", methods=["POST"])
+def create_watchlist_show(user_id):
     body = json.loads(request.data)
     lst = ["name", "year_released", "start_date",
-           "finished", "genre", "user_id"]
+           "finished", "genre"]
     for field in lst:
         if field not in body:
             return failure_response("Necessary information not provided!", 400)
-    user = User.query.filter_by(id=body.get("user_id")).first()
+    user = User.query.filter_by(id=user_id).first()
     if user is None:
         return failure_response("User not found!")
     find_genre = Genre.query.filter_by(name=body.get('genre')).first()
@@ -97,38 +93,20 @@ def create_watchlist_show():
         db.session.add(find_genre)
         db.session.commit()
     new_show = Show(name=body.get("name"), year_released=body.get("year_released"), start_date=body.get(
-        "start_date"), finished=body.get("finished"), genre_id=find_genre.id, is_plan_to_watch=False, user_id=body.get("user_id"))
+        "start_date"), finished=body.get("finished"), genre_id=find_genre.id, is_plan_to_watch=False, user_id=user_id)
     db.session.add(new_show)
     db.session.commit()
 
     return success_response(new_show.serialize(), 201)
 
 
-@app.route("/api/watchlist/<int:show_id>/")
-def get_show_by_id(show_id):
-    body = json.loads(request.data)
-    if "user_id" not in body:
-        return failure_response("user_id not provided!", 400)
-    user = User.query.filter_by(id=body.get("user_id")).first()
+@app.route("/api/watchlist/<int:show_id>/<int:user_id>/", methods=["DELETE"])
+def delete_watchlist_show(show_id, user_id):
+    user = User.query.filter_by(id=user_id).first()
     if user is None:
         return failure_response("User not found!")
     show = Show.query.filter_by(
-        id=show_id, user_id=body.get("user_id")).first()
-    if show is None or show.is_plan_to_watch:
-        return failure_response("Show not found!")
-    return success_response(show.serialize_watch())
-
-
-@app.route("/api/watchlist/<int:show_id>/", methods=["DELETE"])
-def delete_watchlist_show(show_id):
-    body = json.loads(request.data)
-    if "user_id" not in body:
-        return failure_response("user_id not provided!", 400)
-    user = User.query.filter_by(id=body.get("user_id")).first()
-    if user is None:
-        return failure_response("User not found!")
-    show = Show.query.filter_by(
-        id=show_id, user_id=body.get("user_id")).first()
+        id=show_id, user_id=user_id).first()
     if show is None or show.is_plan_to_watch:
         return failure_response("Show not found!")
     db.session.delete(show)
@@ -136,28 +114,25 @@ def delete_watchlist_show(show_id):
     return success_response(show.serialize_watch())
 
 
-@app.route("/api/planlist/")
-def get_shows_by_release_date_plan():
-    body = json.loads(request.data)
-    if "user_id" not in body:
-        return failure_response("user_id not provided!", 400)
-    user = User.query.filter_by(id=body.get("user_id")).first()
+@app.route("/api/planlist/<int:user_id>/")
+def get_shows_by_release_date_plan(user_id):
+    user = User.query.filter_by(id=user_id).first()
     if user is None:
         return failure_response("User not found!")
     return success_response(
-        {"shows": sorted([s.serialize_plan() for s in Show.query.filter_by(is_plan_to_watch=True, user_id=body.get("user_id"))],
+        {"shows": sorted([s.serialize_plan() for s in Show.query.filter_by(is_plan_to_watch=True, user_id=user_id)],
                          key=lambda show: show['year_released'])}
     )
 
 
-@app.route("/api/planlist/", methods=["POST"])
-def create_planlist_show():
+@app.route("/api/planlist/<int:user_id>/", methods=["POST"])
+def create_planlist_show(user_id):
     body = json.loads(request.data)
-    lst = ["name", "year_released", "genre", "user_id"]
+    lst = ["name", "year_released", "genre"]
     for field in lst:
         if field not in body:
             return failure_response("Necessary information not provided!", 400)
-    user = User.query.filter_by(id=body.get("user_id")).first()
+    user = User.query.filter_by(id=user_id).first()
     if user is None:
         return failure_response("User not found!")
     find_genre = Genre.query.filter_by(name=body.get('genre')).first()
@@ -166,38 +141,20 @@ def create_planlist_show():
         db.session.add(find_genre)
         db.session.commit()
     new_show = Show(name=body.get("name"), year_released=body.get(
-        "year_released"), genre_id=find_genre.id, is_plan_to_watch=True, user_id=body.get("user_id"))
+        "year_released"), genre_id=find_genre.id, is_plan_to_watch=True, user_id=user_id)
     db.session.add(new_show)
     db.session.commit()
 
     return success_response(new_show.serialize_plan(), 201)
 
 
-@app.route("/api/planlist/<int:show_id>/")
-def get_show_by_id_plan(show_id):
-    body = json.loads(request.data)
-    if "user_id" not in body:
-        return failure_response("user_id not provided!", 400)
-    user = User.query.filter_by(id=body.get("user_id")).first()
+@app.route("/api/planlist/<int:show_id>/<int:user_id>/", methods=["DELETE"])
+def delete_planlist_show(show_id, user_id):
+    user = User.query.filter_by(id=user_id).first()
     if user is None:
         return failure_response("User not found!")
     show = Show.query.filter_by(
-        id=show_id, user_id=body.get("user_id")).first()
-    if show is None or not show.is_plan_to_watch:
-        return failure_response("Show not found!")
-    return success_response(show.serialize_plan())
-
-
-@app.route("/api/planlist/<int:show_id>/", methods=["DELETE"])
-def delete_planlist_show(show_id):
-    body = json.loads(request.data)
-    if "user_id" not in body:
-        return failure_response("user_id not provided!", 400)
-    user = User.query.filter_by(id=body.get("user_id")).first()
-    if user is None:
-        return failure_response("User not found!")
-    show = Show.query.filter_by(
-        id=show_id, user_id=body.get("user_id")).first()
+        id=show_id, user_id=user_id).first()
     if show is None or not show.is_plan_to_watch:
         return failure_response("Show not found!")
     db.session.delete(show)
@@ -205,12 +162,9 @@ def delete_planlist_show(show_id):
     return success_response(show.serialize_plan())
 
 
-@app.route("/deleteuser/", methods=["DELETE"])
-def delete_user():
-    body = json.loads(request.data)
-    if "user_id" not in body:
-        return failure_response("user_id not provided!", 400)
-    user = User.query.filter_by(id=body.get("user_id")).first()
+@app.route("/deleteuser/<int:user_id>/", methods=["DELETE"])
+def delete_user(user_id):
+    user = User.query.filter_by(id=user_id).first()
     if user is None:
         return failure_response("User not found!")
     db.session.delete(user)

@@ -1,25 +1,5 @@
 Names: Prithwish Dan, Joyce Wu
 NetIDs: pd337, jyw55
 
-Server Address: TBD (http://0.0.0.0:5000/ for now when running app.py)
-
-Routes:
-GET /api/watchlist/
-
-POST /api/watchlist/
-Request Body:
-{
-  "name": "Arcane",
-  "genre": "Science Fantasy",
-  "year_released": 2021,
-  "start_date": "11/20/2021",
-  "finished": false
-}
-
-GET /api/watchlist/<int:show_id>/
-
-DELETE /api/watchlist/<int:show_id>/
-
-GET /api/watchlist/releasesort/
-
-GET /api/genrelist/
+API Spec at this link:
+https://docs.google.com/document/d/1tE6yiz9oZm8LFbe90xhYQVn1R5BX70k0hyvZNXK8GYc/edit?usp=sharing

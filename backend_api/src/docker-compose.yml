@@ -1,6 +1,6 @@
 version: "3"
-services: 
-    show-tracker: 
-        image: prithwishdan/show-tracker
-        ports: 
-            - "5000:5000"
+services:
+  show-tracker:
+    image: "joycrwu/show-tracker"
+    ports:
+      - 5000:5000
